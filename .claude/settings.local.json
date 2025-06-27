@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run quicktype:*)",
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx:*)",
+      "Bash(npm link:*)",
+      "Bash(quicktype:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": []
+  }
+}

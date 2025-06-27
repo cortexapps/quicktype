@@ -80,6 +80,12 @@ import com.fasterxml.jackson.databind.node.*
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.fasterxml.jackson.module.kotlin.*`);
 
+        if (this._kotlinOptions.mongoDocument) {
+            this.emitLine();
+            this.emitLine("import org.springframework.data.mongodb.core.mapping.Document");
+            this.emitLine("import org.springframework.data.mongodb.core.mapping.Field");
+        }
+
         const hasUnions = iterableSome(
             this.typeGraph.allNamedTypes(),
             (t) => t instanceof UnionType && nullableFromUnion(t) === null,
@@ -259,6 +265,27 @@ import com.fasterxml.jackson.module.kotlin.*`);
         const rename = this.jacksonRenameAttribute(name, jsonName, required);
         if (rename !== undefined) {
             meta.push(() => this.emitLine(rename));
+        }
+        
+        // Add MongoDB @Field annotation if mongoDocument option is set
+        if (this._kotlinOptions.mongoDocument) {
+            const propNameString = this.sourcelikeToString(name);
+            // Only add @Field if the property name differs from the JSON name
+            if (propNameString !== jsonName) {
+                meta.push(() => this.emitLine(`@Field("${stringEscape(jsonName)}")`));
+            }
+        }
+    }
+
+    protected emitClassAnnotations(c: Type, _className: Name): void {
+        if (this._kotlinOptions.mongoDocument) {
+            // Check if this type is a top-level type
+            for (const topLevelType of this.topLevels.values()) {
+                if (topLevelType === c) {
+                    this.emitLine(`@Document("${this._kotlinOptions.mongoDocument}")`);
+                    break;
+                }
+            }
         }
     }
 

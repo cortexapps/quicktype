@@ -1,0 +1,16 @@
+{
+  "repository_id": "123",
+  "repository_name": "Test Repository",
+  "html_url": "https://github.com/test/repo",
+  "star_count": 42,
+  "repository_owner": {
+    "user_id": "456",
+    "full_name": "John Doe",
+    "email_address": "john@example.com"
+  },
+  "repository_settings": {
+    "is_private": false,
+    "allow_forks": true,
+    "default_branch": "main"
+  }
+}

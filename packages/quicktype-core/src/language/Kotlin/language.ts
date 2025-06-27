@@ -29,6 +29,7 @@ export const kotlinOptions = {
     ),
     acronymStyle: acronymOption(AcronymStyleOptions.Pascal),
     packageName: new StringOption("package", "Package", "PACKAGE", "quicktype"),
+    mongoDocument: new StringOption("mongo-document", "MongoDB Document collection name", "COLLECTION", ""),
 };
 
 export const kotlinLanguageConfig = {

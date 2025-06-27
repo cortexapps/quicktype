@@ -1,0 +1,15 @@
+{
+  "id": "123",
+  "name": "Test Repository",
+  "url": "https://github.com/test/repo",
+  "stars": 42,
+  "owner": {
+    "id": "456",
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "settings": {
+    "isPrivate": false,
+    "allowForks": true
+  }
+}

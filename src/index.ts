@@ -1214,6 +1214,7 @@ export function writeOutput(
 export async function main(
     args: string[] | Partial<CLIOptions>,
 ): Promise<void> {
+    console.log("quicktype CLI is running! v3");
     let cliOptions: CLIOptions;
     if (Array.isArray(args)) {
         cliOptions = parseCLIOptions(args);
