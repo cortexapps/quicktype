@@ -77,6 +77,7 @@ import {
     nullableFromUnion,
     separateNamedTypes,
 } from "./Type/TypeUtils";
+import { getPluginRunner, type PluginRunner } from "./PluginSupport";
 
 const wordWrap: (s: string) => string = _wordwrap(90);
 
@@ -170,16 +171,30 @@ export abstract class ConvenienceRenderer extends Renderer {
     private _cycleBreakerTypes?: Set<Type> | undefined;
 
     private _alphabetizeProperties = false;
+    
+    protected pluginRunner: PluginRunner | undefined;
 
     public constructor(
         targetLanguage: TargetLanguage,
         renderContext: RenderContext,
     ) {
         super(targetLanguage, renderContext);
+        // Plugin runner will be initialized by subclasses that pass options
     }
 
     public get topLevels(): ReadonlyMap<string, Type> {
         return this.typeGraph.topLevels;
+    }
+    
+    // Plugin hook methods - to be called by language renderers
+    protected runPluginHook(hookName: string, context?: any): void {
+        if (this.pluginRunner) {
+            this.pluginRunner.runHook(hookName, context);
+        }
+    }
+    
+    protected initializePlugins(options: any): void {
+        this.pluginRunner = getPluginRunner(this, options);
     }
 
     /**

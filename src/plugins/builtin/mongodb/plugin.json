@@ -1,0 +1,8 @@
+{
+  "name": "mongodb",
+  "version": "1.0.0",
+  "description": "Add MongoDB annotations for Spring Data",
+  "author": "quicktype",
+  "main": "index.ts",
+  "keywords": ["mongodb", "spring-data", "kotlin", "java"]
+}

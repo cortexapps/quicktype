@@ -66,6 +66,12 @@ import type {
     TypeSource,
 } from "./TypeSource";
 import { urlsFromURLGrammar } from "./URLGrammar";
+import { pluginRegistry } from "./plugins/registry";
+import { globalPluginRunner } from "./plugins/PluginRunner";
+import { setGlobalPluginRunner } from "quicktype-core";
+
+// Set up global plugin runner
+setGlobalPluginRunner(globalPluginRunner);
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const packageJSON = require("../package.json");
@@ -101,6 +107,7 @@ export interface CLIOptions<Lang extends LanguageName = LanguageName> {
     topLevel: string;
 
     version: boolean;
+    plugins?: string[];
 }
 
 const defaultDefaultTargetLanguageName = "go";
@@ -370,6 +377,7 @@ function inferCLIOptions(
         httpHeader: opts.httpHeader,
         debug: opts.debug,
         telemetry: opts.telemetry,
+        plugins: opts.plugins,
     };
     for (const flagName of inferenceFlagNames) {
         const cliName = negatedInferenceFlagName(flagName);
@@ -407,6 +415,9 @@ function dashedFromCamelCase(name: string): string {
 function makeOptionDefinitions(
     targetLanguages: readonly TargetLanguage[],
 ): OptionDefinition[] {
+    // Allow plugins to modify option definitions
+    const languageName = targetLanguages.length === 1 ? targetLanguages[0].name : "typescript";
+    let allDefinitions: OptionDefinition[] = [];
     const beforeLang: OptionDefinition[] = [
         {
             name: "out",
@@ -563,6 +574,15 @@ function makeOptionDefinitions(
             kind: "cli",
         },
         {
+            name: "plugins",
+            alias: "p",
+            optionType: "string",
+            multiple: true,
+            typeLabel: "PLUGIN",
+            description: "Enable plugins (e.g., mongodb, validation)",
+            kind: "cli",
+        },
+        {
             name: "help",
             alias: "h",
             optionType: "boolean",
@@ -577,7 +597,12 @@ function makeOptionDefinitions(
             kind: "cli",
         },
     ];
-    return beforeLang.concat(lang, afterLang, inference, afterInference);
+    allDefinitions = beforeLang.concat(lang, afterLang, inference, afterInference);
+    
+    // Let plugins modify option definitions
+    allDefinitions = pluginRegistry.modifyOptions(allDefinitions, languageName);
+    
+    return allDefinitions;
 }
 
 interface ColumnDefinition {
@@ -1241,6 +1266,18 @@ export async function main(
         }
     }
 
+    // Enable plugins if specified
+    if (cliOptions.plugins) {
+        for (const pluginName of cliOptions.plugins) {
+            try {
+                pluginRegistry.enablePlugin(pluginName);
+            } catch (e) {
+                console.error(chalk.red(`Failed to enable plugin "${pluginName}": ${e}`));
+                return;
+            }
+        }
+    }
+
     const quicktypeOptions = await makeQuicktypeOptions(cliOptions);
     if (quicktypeOptions === undefined) {
         return;
@@ -1255,6 +1292,9 @@ if (require.main === module) {
     main(process.argv.slice(2)).catch((e) => {
         if (e instanceof Error) {
             console.error(`Error: ${e.message}.`);
+            if (process.env.DEBUG) {
+                console.error(e.stack);
+            }
         } else {
             console.error(e);
         }

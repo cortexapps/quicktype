@@ -40,6 +40,9 @@ export class KotlinRenderer extends ConvenienceRenderer {
         protected readonly _kotlinOptions: OptionValues<typeof kotlinOptions>,
     ) {
         super(targetLanguage, renderContext);
+        
+        // Initialize plugin runner
+        this.initializePlugins(_kotlinOptions);
     }
 
     protected forbiddenNamesForGlobalNamespace(): readonly string[] {
@@ -212,6 +215,12 @@ export class KotlinRenderer extends ConvenienceRenderer {
         this.emitLine("package ", this._kotlinOptions.packageName);
         this.ensureBlankLine();
     }
+    
+    protected emitImports(): void {
+        // Base implementation - framework renderers can override
+        // Run plugin hook for additional imports
+        this.runPluginHook('afterImports');
+    }
 
     protected emitTopLevelPrimitive(t: PrimitiveType, name: Name): void {
         const elementType = this.kotlinType(t);
@@ -314,17 +323,46 @@ export class KotlinRenderer extends ConvenienceRenderer {
         this.emitLine(")");
     }
 
-    protected emitClassAnnotations(_c: Type, _className: Name): void {
-        // to be overridden
+    protected emitClassAnnotations(c: Type, className: Name): void {
+        // Run plugin hook for class annotations
+        this.runPluginHook('beforeClass', { 
+            classType: c, 
+            className: className 
+        });
     }
 
     protected renameAttribute(
-        _name: Name,
-        _jsonName: string,
+        name: Name,
+        jsonName: string,
         _required: boolean,
-        _meta: Array<() => void>,
+        meta: Array<() => void>,
     ): void {
-        // to be overridden
+        // Run plugin hook for property annotations
+        const propertyAnnotations: string[] = [];
+        const originalEmitLine = this.emitLine.bind(this);
+        
+        // Temporarily override emitLine to capture annotations
+        (this as any).emitLine = (line: string) => {
+            propertyAnnotations.push(line);
+        };
+        (this as any).emitAnnotation = (line: string) => {
+            propertyAnnotations.push(line);
+        };
+        
+        this.runPluginHook('beforeProperty', { 
+            propertyName: this.sourcelikeToString(name),
+            jsonName: jsonName 
+        });
+        
+        // Restore original emitLine
+        (this as any).emitLine = originalEmitLine;
+        
+        // Add captured annotations to meta
+        if (propertyAnnotations.length > 0) {
+            meta.push(() => {
+                propertyAnnotations.forEach(line => this.emitLine(line));
+            });
+        }
     }
 
     protected emitEnumDefinition(e: EnumType, enumName: Name): void {

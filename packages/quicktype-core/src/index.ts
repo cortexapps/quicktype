@@ -40,6 +40,7 @@ export {
     type OptionValues,
 } from "./RendererOptions";
 export { TargetLanguage, type MultiFileRenderResult } from "./TargetLanguage";
+export { setGlobalPluginRunner, type PluginRunner } from "./PluginSupport";
 
 export {
     type MultiWord,

@@ -21,7 +21,6 @@ import { matchType, nullableFromUnion } from "../../Type/TypeUtils";
 import { KotlinRenderer } from "./KotlinRenderer";
 import type { kotlinOptions } from "./language";
 import { stringEscape } from "./utils";
-
 export class KotlinJacksonRenderer extends KotlinRenderer {
     public constructor(
         targetLanguage: TargetLanguage,
@@ -79,12 +78,9 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.*
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.fasterxml.jackson.module.kotlin.*`);
-
-        if (this._kotlinOptions.mongoDocument) {
-            this.emitLine();
-            this.emitLine("import org.springframework.data.mongodb.core.mapping.Document");
-            this.emitLine("import org.springframework.data.mongodb.core.mapping.Field");
-        }
+        
+        // Call emitImports to run plugin hooks
+        this.emitImports();
 
         const hasUnions = iterableSome(
             this.typeGraph.allNamedTypes(),
@@ -267,26 +263,13 @@ import com.fasterxml.jackson.module.kotlin.*`);
             meta.push(() => this.emitLine(rename));
         }
         
-        // Add MongoDB @Field annotation if mongoDocument option is set
-        if (this._kotlinOptions.mongoDocument) {
-            const propNameString = this.sourcelikeToString(name);
-            // Only add @Field if the property name differs from the JSON name
-            if (propNameString !== jsonName) {
-                meta.push(() => this.emitLine(`@Field("${stringEscape(jsonName)}")`));
-            }
-        }
+        // Call parent class to handle plugin hooks
+        super.renameAttribute(name, jsonName, required, meta);
     }
 
-    protected emitClassAnnotations(c: Type, _className: Name): void {
-        if (this._kotlinOptions.mongoDocument) {
-            // Check if this type is a top-level type
-            for (const topLevelType of this.topLevels.values()) {
-                if (topLevelType === c) {
-                    this.emitLine(`@Document("${this._kotlinOptions.mongoDocument}")`);
-                    break;
-                }
-            }
-        }
+    protected emitClassAnnotations(c: Type, className: Name): void {
+        // Call parent class to handle plugin hooks
+        super.emitClassAnnotations(c, className);
     }
 
     protected emitEnumDefinition(e: EnumType, enumName: Name): void {

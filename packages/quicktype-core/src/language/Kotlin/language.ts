@@ -29,7 +29,6 @@ export const kotlinOptions = {
     ),
     acronymStyle: acronymOption(AcronymStyleOptions.Pascal),
     packageName: new StringOption("package", "Package", "PACKAGE", "quicktype"),
-    mongoDocument: new StringOption("mongo-document", "MongoDB Document collection name", "COLLECTION", ""),
 };
 
 export const kotlinLanguageConfig = {
@@ -62,16 +61,19 @@ export class KotlinTargetLanguage extends TargetLanguage<
         untypedOptionValues: RendererOptions<Lang>,
     ): ConvenienceRenderer {
         const options = getOptionValues(kotlinOptions, untypedOptionValues);
+        
+        // Merge in any additional options from plugins (like mongo-collection)
+        const allOptions = { ...options, ...untypedOptionValues };
 
         switch (options.framework) {
             case "None":
-                return new KotlinRenderer(this, renderContext, options);
+                return new KotlinRenderer(this, renderContext, allOptions);
             case "Jackson":
-                return new KotlinJacksonRenderer(this, renderContext, options);
+                return new KotlinJacksonRenderer(this, renderContext, allOptions);
             case "Klaxon":
-                return new KotlinKlaxonRenderer(this, renderContext, options);
+                return new KotlinKlaxonRenderer(this, renderContext, allOptions);
             case "KotlinX":
-                return new KotlinXRenderer(this, renderContext, options);
+                return new KotlinXRenderer(this, renderContext, allOptions);
             default:
                 return assertNever(options.framework);
         }

@@ -89,8 +89,28 @@ export class JacksonRenderer extends JavaRenderer {
             default:
                 break;
         }
+        
+        // Run plugin hook for property annotations
+        const propertyAnnotations: string[] = [];
+        const originalEmitLine = this.emitLine.bind(this);
+        
+        // Temporarily override emitLine to capture annotations
+        (this as any).emitLine = (line: string) => {
+            propertyAnnotations.push(line);
+        };
+        (this as any).emitAnnotation = (line: string) => {
+            propertyAnnotations.push(line);
+        };
+        
+        this.runPluginHook('beforeProperty', { 
+            propertyName: this.sourcelikeToString(_propertyName),
+            jsonName: jsonName 
+        });
+        
+        // Restore original emitLine
+        (this as any).emitLine = originalEmitLine;
 
-        return [...superAnnotations, ...annotations];
+        return [...superAnnotations, ...annotations, ...propertyAnnotations];
     }
 
     protected importsForType(t: ClassType | UnionType | EnumType): string[] {

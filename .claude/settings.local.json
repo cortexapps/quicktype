@@ -10,7 +10,12 @@
       "Bash(npx:*)",
       "Bash(npm link:*)",
       "Bash(quicktype:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(tsc)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(DEBUG=1 quicktype test-snake-case.json --lang kotlin --framework jackson --mongo-collection asset_github_repository)",
+      "Bash(DEBUG=1 node dist/index.js test-snake-case.json --lang kotlin --framework jackson --mongo-collection asset_github_repository)"
     ],
     "deny": []
   }

@@ -66,6 +66,9 @@ export class JavaRenderer extends ConvenienceRenderer {
         protected readonly _options: OptionValues<typeof javaOptions>,
     ) {
         super(targetLanguage, renderContext);
+        
+        // Initialize plugin runner
+        this.initializePlugins(_options);
 
         switch (_options.dateTimeProvider) {
             case "legacy":
@@ -265,6 +268,9 @@ export class JavaRenderer extends ConvenienceRenderer {
         for (const pkg of imports) {
             this.emitLine("import ", pkg, ";");
         }
+        
+        // Run plugin hook for additional imports
+        this.runPluginHook('afterImports');
     }
 
     protected emitFileHeader(fileName: Sourcelike, imports: string[]): void {
@@ -439,10 +445,16 @@ export class JavaRenderer extends ConvenienceRenderer {
         return this.javaType(reference, t);
     }
 
-    protected emitClassAttributes(_c: ClassType, _className: Name): void {
+    protected emitClassAttributes(c: ClassType, className: Name): void {
         if (this._options.lombok) {
             this.emitLine("@lombok.Data");
         }
+        
+        // Run plugin hook for class annotations
+        this.runPluginHook('beforeClass', { 
+            classType: c, 
+            className: className 
+        });
     }
 
     protected annotationsForAccessor(
